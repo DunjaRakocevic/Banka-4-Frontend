@@ -1,55 +1,82 @@
 import { useRef, useLayoutEffect, useState, useMemo } from 'react';
 import gsap from 'gsap';
+
+// Layout & UI (Pratimo tvoj folder structure sa slike)
 import Navbar from '../components/layout/Navbar';
+import Spinner from '../components/ui/Spinner';
+import Alert from '../components/ui/Alert';
+
+// Features (Tvoje izdvojene komponente)
+import PaymentFilters from '../features/payments/PaymentFilters';
+import PaymentTable from '../features/payments/PaymentTable';
+
 import styles from './PaymentOverview.module.css';
 
 export default function PaymentOverview() {
   const pageRef = useRef(null);
 
-  // 1. STATE ZA PODATKE I FILTERE (Pravilo 10.2)
+  // 1. STATE ZA PODATKE (Pravilo 10.3 - Loading/Error)
   const [loading] = useState(false);
   const [error] = useState(null);
+  
+  // Prošireni podaci da podrže "Menjačnicu" i "Plaćanja" (Zahtev 1)
   const [transactions] = useState([
-    { id: 1, date: '2024-03-14 14:20', recipient: 'Restoran "Sidro"', amount: -4200.00, currency: 'RSD', status: 'Realizovano', type: 'payment' },
-    { id: 2, date: '2024-03-14 12:15', recipient: 'Menjačnica (RSD -> EUR)', amount: -11750.00, currency: 'RSD', status: 'U obradi', type: 'exchange' },
-    { id: 3, date: '2024-03-13 09:00', recipient: 'Infostan', amount: -8500.00, currency: 'RSD', status: 'Odbijeno', type: 'payment' }
+    { id: 1, date: '2024-03-14 14:20', recipient: 'Restoran "Sidro"', amount: -4200.00, currency: 'RSD', status: 'Realizovano', type: 'payment', fee: 15.00, model: '97', reference: '12-345-678' },
+    { id: 2, date: '2024-03-14 12:15', recipient: 'Menjačnica (RSD -> EUR)', amount: -11750.00, currency: 'RSD', status: 'U obradi', type: 'exchange', fee: 0.00, model: '00', reference: 'TRF-9921' },
+    { id: 3, date: '2024-03-13 09:00', recipient: 'Infostan', amount: -8500.00, currency: 'RSD', status: 'Odbijeno', type: 'payment', fee: 45.00, model: '11', reference: 'INF-2024-X' }
   ]);
 
-  const [filterStatus, setFilterStatus] = useState('');
+  // 2. STATE ZA KARTICE (Tvoj novi zahtev sa slike 99)
+  const [activeTab, setActiveTab] = useState('payments'); // 'payments' ili 'exchange'
 
-  // 2. LOGIKA FILTRIRANJA
+  // 3. STATE ZA FILTERE (Kontrolisane komponente - Pravilo 10.2)
+  const [filters, setFilters] = useState({
+    status: '',
+    dateFrom: '',
+    dateTo: '',
+    amountFrom: '',
+    amountTo: ''
+  });
+
+  // 4. LOGIKA FILTRIRANJA (useMemo za performanse)
   const filteredData = useMemo(() => {
-    if (!filterStatus) return transactions;
-    return transactions.filter(t => t.status === filterStatus);
-  }, [filterStatus, transactions]);
+    if (!transactions) return [];
+    
+    return transactions.filter(t => {
+      // Prvo filtriramo po kartici (Pravilo 1)
+      const matchTab = activeTab === 'payments' ? t.type === 'payment' : t.type === 'exchange';
+      if (!matchTab) return false;
 
-  // 3. GSAP ANIMACIJA (Šablon 10.1)
+      // Zatim tvoji ostali filteri
+      const matchStatus = !filters.status || t.status === filters.status;
+      const tDate = new Date(t.date).getTime();
+      const matchDateFrom = !filters.dateFrom || tDate >= new Date(filters.dateFrom).getTime();
+      const matchDateTo = !filters.dateTo || tDate <= new Date(filters.dateTo).getTime();
+
+      const tAmount = Math.abs(t.amount);
+      const matchAmountFrom = !filters.amountFrom || tAmount >= parseFloat(filters.amountFrom);
+      const matchAmountTo = !filters.amountTo || tAmount <= parseFloat(filters.amountTo);
+
+      return matchStatus && matchDateFrom && matchDateTo && matchAmountFrom && matchAmountTo;
+    });
+  }, [filters, transactions, activeTab]);
+
+  // 5. ANIMACIJA (Pravilo 10.1)
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       gsap.from('.sadrzaj', { 
         opacity: 0, 
         y: 20, 
         stagger: 0.1, 
-        duration: 0.4,
+        duration: 0.4, 
         ease: 'power2.out' 
       });
     }, pageRef);
     return () => ctx.revert();
-  }, []);
+  }, [activeTab]); // Animacija se ponavlja kad promeniš karticu
 
-  // 4. HANDLING STANJA (Pravilo 10.3)
-  if (loading) return <div className={styles.content}>Učitavanje...</div>;
-  if (error) return <div className={styles.content}>Došlo je do greške.</div>;
-  if (!transactions) return null;
-
-  // Pomoćna za boje statusa
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'Realizovano': return { bg: '#e6f4ea', text: '#1e7e34' };
-      case 'Odbijeno': return { bg: '#fdecea', text: '#d93025' };
-      default: return { bg: '#f1f3f5', text: '#5f6368' };
-    }
-  };
+  if (loading) return <Spinner />;
+  if (error) return <Alert type="error" message="Greška pri učitavanju." />;
 
   return (
     <div className={styles.pageContainer} ref={pageRef}>
@@ -57,66 +84,37 @@ export default function PaymentOverview() {
       
       <main className={styles.content}>
         <header className="sadrzaj">
-          <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Pregled plaćanja</h1>
-          <p style={{ color: '#666', marginBottom: '30px' }}>Istorija transakcija i menjačkih poslova</p>
+          <h1 className={styles.title}>Pregled plaćanja</h1>
+          <p className={styles.subtitle}>Istorija transakcija i menjačkih poslova</p>
         </header>
 
-        {/* FILTERI */}
-        <section className={`${styles.filterBox} sadrzaj`}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 'bold' }}>STATUS</label>
-            <select 
-              style={{ padding: '10px', borderRadius: '6px', border: '1px solid #ddd', minWidth: '150px' }}
-              onChange={(e) => setFilterStatus(e.target.value)}
-            >
-              <option value="">Svi statusi</option>
-              <option value="Realizovano">Realizovano</option>
-              <option value="U obradi">U obradi</option>
-              <option value="Odbijeno">Odbijeno</option>
-            </select>
-          </div>
-          <button style={{ 
-            padding: '11px 25px', background: '#212529', color: 'white', 
-            border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
-          }}>
-            Primeni filter
+        {/* KARTICE (Tabs) - Izgled sa tvoje slike 99 */}
+        <div className={`${styles.tabsContainer} sadrzaj`}>
+          <button 
+            className={`${styles.tab} ${activeTab === 'payments' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('payments')}
+          >
+            Domaća plaćanja
           </button>
+          <button 
+            className={`${styles.tab} ${activeTab === 'exchange' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('exchange')}
+          >
+            Menjačnica
+          </button>
+        </div>
+
+        {/* FILTERI */}
+        <section className="sadrzaj">
+          <PaymentFilters filters={filters} setFilters={setFilters} />
         </section>
 
-        {/* TABELA */}
+        {/* TABELA (Sada izdvojena i čista) */}
         <div className={`${styles.tableCard} sadrzaj`}>
-          <table className={styles.mainTable}>
-            <thead>
-              <tr>
-                <th>Datum i vreme</th>
-                <th>Primalac / Svrha</th>
-                <th style={{ textAlign: 'right' }}>Iznos</th>
-                <th style={{ textAlign: 'center' }}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map(t => {
-                const colors = getStatusColor(t.status);
-                return (
-                  <tr key={t.id}>
-                    <td>{t.date}</td>
-                    <td>
-                      <div style={{ fontWeight: '500' }}>{t.recipient}</div>
-                      <div style={{ fontSize: '11px', color: '#888' }}>{t.type === 'exchange' ? 'Interni prenos' : 'Plaćanje'}</div>
-                    </td>
-                    <td style={{ textAlign: 'right' }} className={t.amount < 0 ? styles.amountNegative : styles.amountPositive}>
-                      {t.amount.toLocaleString('sr-RS', { minimumFractionDigits: 2 })} {t.currency}
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <span className={styles.status} style={{ background: colors.bg, color: colors.text }}>
-                        {t.status}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <PaymentTable 
+            transactions={filteredData} 
+            onRowClick={(trans) => console.log("Otvaram modal za:", trans)}
+          />
         </div>
       </main>
     </div>
