@@ -7,9 +7,13 @@ import Dashboard           from './pages/Dashboard';
 import EmployeeList        from './pages/EmployeeList';
 import NewEmployee         from './pages/NewEmployee';
 import EmployeeDetails     from './pages/EmployeeDetails';
+
+import NewAccount          from './pages/NewAccount';
+
 import CardsPortal         from './pages/CardsPortal';
 import ClientsPortal       from './pages/ClientsPortal';
 import LoansPortal         from './pages/LoansPortal';
+
 import NotFound            from './pages/NotFound';
 
 function ProtectedRoute({ children }) {
@@ -28,21 +32,45 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+       
         <Route path="/login"          element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/activate"       element={<AccountActivation />} />
 
+        {/* Protected routes */}
         <Route path="/" element={
           <ProtectedRoute><Dashboard /></ProtectedRoute>
         } />
+
         <Route path="/employees" element={
-          <ProtectedRoute><PermissionRoute permission="employee.view"><EmployeeList /></PermissionRoute></ProtectedRoute>
+          <ProtectedRoute>
+            <PermissionRoute permission="employee.view">
+              <EmployeeList />
+            </PermissionRoute>
+          </ProtectedRoute>
         } />
         <Route path="/employees/new" element={
-          <ProtectedRoute><PermissionRoute permission="employee.create"><NewEmployee /></PermissionRoute></ProtectedRoute>
+          <ProtectedRoute>
+            <PermissionRoute permission="employee.create">
+              <NewEmployee />
+            </PermissionRoute>
+          </ProtectedRoute>
         } />
         <Route path="/employees/:id" element={
-          <ProtectedRoute><PermissionRoute permission="employee.view"><EmployeeDetails /></PermissionRoute></ProtectedRoute>
+          <ProtectedRoute>
+            <PermissionRoute permission="employee.view">
+              <EmployeeDetails />
+            </PermissionRoute>
+          </ProtectedRoute>
+        } />
+
+        {/* Accounts module */}
+        <Route path="/accounts/new" element={
+          <ProtectedRoute>
+            <PermissionRoute permission="account.create">
+              <NewAccount />
+            </PermissionRoute>
+          </ProtectedRoute>
         } />
 
         <Route path="/admin/cards" element={

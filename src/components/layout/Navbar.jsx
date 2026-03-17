@@ -11,12 +11,14 @@ export default function Navbar() {
   const logout   = useAuthStore(s => s.logout);
   const { can, canAny } = usePermissions();
 
+
   const [showMenu,      setShowMenu]      = useState(false);
   const [showPwModal,   setShowPwModal]   = useState(false);
   const [showAdminMenu, setShowAdminMenu] = useState(false);
 
   const menuRef  = useRef(null);
   const adminRef = useRef(null);
+ 
 
   useEffect(() => {
     function handleClick(e) {
@@ -73,6 +75,15 @@ export default function Navbar() {
             Klijenti
           </NavLink>
 
+
+          {can('account.create') && (
+            <NavLink
+              to="/accounts/new"
+              className={({ isActive }) => `${styles.navLink} ${isActive ? styles.active : ''}`}
+            >
+              Novi račun
+            </NavLink>
+          )}
           {hasAdminAccess && (
             <div className={styles.adminDropdownWrap} ref={adminRef}>
               <button
@@ -129,6 +140,7 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+            
           )}
         </div>
 
