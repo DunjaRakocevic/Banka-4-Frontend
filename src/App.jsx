@@ -11,6 +11,12 @@ import NotFound            from './pages/NotFound';
 import CreateTransfer from './features/transfers/CreateTransfer';
 import ConfirmTransfer from './features/transfers/ConfirmTransfer';
 import TransfersHistory from './features/transfers/TransfersHistory';
+import NewPayment from './pages/NewPayment';
+import Recipients from './pages/Recipients';
+import PaymentSummary from './features/payments/PaymentSummary';
+import PaymentsOverview from './pages/PaymentsOverview';
+
+
 
 function ProtectedRoute({ children }) {
   const token = useAuthStore(s => s.token);
@@ -51,7 +57,13 @@ export default function App() {
           <Route path="/transfers/confirm" element={<ProtectedRoute><ConfirmTransfer /></ProtectedRoute>} />
           <Route path="/transfers/history" element={<ProtectedRoute><TransfersHistory /></ProtectedRoute>} />
 
-        <Route path="*" element={<NotFound />} />
+          {/* Payments routes */}
+          <Route path="/payments/new" element={<ProtectedRoute><NewPayment /></ProtectedRoute>} />
+          <Route path="/payments/confirm" element={<ProtectedRoute><PaymentSummary /></ProtectedRoute>} />
+          <Route path="/payments/recipients" element={<ProtectedRoute><Recipients /></ProtectedRoute>} />
+          <Route path="/payments/overview" element={<ProtectedRoute><PaymentsOverview /></ProtectedRoute>} />
+
+          <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
