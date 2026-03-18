@@ -9,6 +9,11 @@ import NewEmployee         from './pages/NewEmployee';
 import EmployeeDetails     from './pages/EmployeeDetails';
 import Accounts            from './pages/Accounts';
 import NotFound            from './pages/NotFound';
+
+import CreateTransfer from './features/transfers/CreateTransfer';
+import ConfirmTransfer from './features/transfers/ConfirmTransfer';
+import TransfersHistory from './features/transfers/TransfersHistory';
+
 import Loans from './pages/Loans';
 
 import PaymentOverview from './pages/PaymentOverview';
@@ -81,6 +86,10 @@ export default function App() {
         <Route path="/exchange/rates" element={<RatesList />} />
         <Route path="/exchange/calculator" element={<CurrencyCalculator />} />
 
+
+          <Route path="/transfers/new" element={<ProtectedRoute><CreateTransfer /></ProtectedRoute>} />
+          <Route path="/transfers/confirm" element={<ProtectedRoute><ConfirmTransfer /></ProtectedRoute>} />
+          <Route path="/transfers/history" element={<ProtectedRoute><TransfersHistory /></ProtectedRoute>} />
 
         <Route path="*" element={<NotFound />} />
 

@@ -1,8 +1,6 @@
 import api from './client';
 
 const DELAY = 600;
-const MOCK_ENABLED  = import.meta.env.VITE_MOCK_ENABLED  !== 'false';
-const MOCK_ACCOUNTS = import.meta.env.VITE_MOCK_ACCOUNTS !== 'false';
 
 const delay = ms => new Promise(r => setTimeout(r, ms));
 
@@ -29,6 +27,7 @@ const FAKE_TRANSACTIONS = [
 ];
 
 const FAKE_EMPLOYEE = {
+
 
   employee_id: 1,
   first_name: 'Petar',
@@ -65,6 +64,7 @@ const FAKE_EMPLOYEES = [
     { employee_id: 8, first_name: 'Ivana',   last_name: 'Marković',  email: 'ivana.markovic@rafbank.rs',    username: 'imarkovic',  position_id: 8, department: 'Finance',    active: true,  gender: 'F', date_of_birth: '1989-04-14', phone_number: '+381601234574', address: 'Balkanska 12' },
 
 ];
+
 
 
 const FAKE_RATES = [
@@ -193,11 +193,12 @@ api.interceptors.request.use(async config => {
     return config;
 
 api.interceptors.request.use(async config => {
-  await delay(DELAY);
+    await delay(DELAY);
 
-  const { method, url, data: rawData, params } = config;
-  const data = typeof rawData === 'string' ? JSON.parse(rawData || '{}') : rawData ?? {};
-  const path = url?.replace(import.meta.env.VITE_API_URL ?? '', '') ?? '';
+    const { method, url, data: rawData, params } = config;
+    const data = typeof rawData === 'string' ? JSON.parse(rawData || '{}') : rawData ?? {};
+    const path = url?.replace(import.meta.env.VITE_API_URL ?? '', '') ?? '';
+
 
 
 
@@ -473,6 +474,7 @@ function throwFakeResponse(config, responseData, status = 200) {
     config.adapter = () =>
         Promise.resolve({
             data:    responseData,
+
             status,
             headers: {},
             config,
