@@ -7,8 +7,15 @@ import Dashboard           from './pages/Dashboard';
 import EmployeeList        from './pages/EmployeeList';
 import NewEmployee         from './pages/NewEmployee';
 import EmployeeDetails     from './pages/EmployeeDetails';
+import Accounts            from './pages/Accounts';
 import NotFound            from './pages/NotFound';
 import PaymentOverview from './pages/PaymentOverview';
+
+
+import CardsPage           from './pages/CardsPage';
+
+import RatesList from "./features/exchange/RatesList.jsx";
+import CurrencyCalculator from "./features/exchange/CurrencyCalculator.jsx";
 
 
 function ProtectedRoute({ children }) {
@@ -20,6 +27,12 @@ function ProtectedRoute({ children }) {
 function PermissionRoute({ permission, children }) {
   const permissions = useAuthStore(s => s.user?.permissions ?? []);
   if (!permissions.includes(permission)) return <Navigate to="/" replace />;
+  return children;
+}
+
+function ClientRoute({ children }) {
+  const identityType = useAuthStore(s => s.user?.identity_type);
+  if (identityType?.toUpperCase() !== 'CLIENT') return <Navigate to="/" replace />;
   return children;
 }
 
@@ -50,7 +63,23 @@ export default function App() {
           <ProtectedRoute><PaymentOverview /></ProtectedRoute>
         } />
 
+        <Route path="/cards" element={
+          <ProtectedRoute><CardsPage/></ProtectedRoute>
+        } />
+
+        <Route path="/accounts" element={
+          <ProtectedRoute><ClientRoute><Accounts /></ClientRoute></ProtectedRoute>
+        } />
+
+
+        <Route path="/exchange/rates" element={<RatesList />} />
+        <Route path="/exchange/calculator" element={<CurrencyCalculator />} />
+
+
         <Route path="*" element={<NotFound />} />
+
+
+
       </Routes>
     </BrowserRouter>
   );
