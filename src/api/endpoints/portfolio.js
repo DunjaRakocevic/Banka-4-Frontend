@@ -13,11 +13,11 @@ export const portfolioApi = {
   exerciseOption: (optionId) => api.post(`/portfolio/exercise/${optionId}`)
 };
 */
-import api from '../client';
+import { bankingApi as api } from '../client';
 
 export const portfolioApi = {
-  // Mora biti /client/ID/assets, nikako /portfolio/client/ID
-  getClientPortfolio: (clientId) => api.get(`/client/${clientId}/assets`),
+  // 
+  getClientPortfolio: (clientId) => api.get(`/clients/${clientId}/assets`),
   
   // Za aktuara (zaposlenog)
   getActuaryPortfolio: (actId) => api.get(`/actuary/${actId}/assets`),

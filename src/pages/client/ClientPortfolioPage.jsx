@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 import { useAuthStore } from '../../store/authStore';
-// import { portfolioApi } from '../../api/endpoints/portfolio'; // Zakomentarisano
+import { portfolioApi } from '../../api/endpoints/portfolio'; // Zakomentarisano
 import ClientHeader from '../../components/layout/ClientHeader';
 import PortfolioTable from '../../features/portfolio/PortfolioTable';
 import ProfitSummary from '../../features/portfolio/ProfitSummary';
@@ -64,25 +64,17 @@ export default function ClientPortfolioPage() {
   useEffect(() => {
     const loadData = async () => {
       // if (!user?.id) return; // Možeš ostaviti ili skloniti dok testiraš mock
-      try {
-        setLoading(true);
-        
-        // Simuliramo mrežni delay od 800ms da bi videli animacije
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        /* // --- ZAKOMENTARISAN PRAVI API POZIV ---
-        const res = await portfolioApi.getClientPortfolio(user.id);
-        setPortfolio(res.data);
-        */
-
-        // POSTAVLJANJE MOCK PODATAKA
-        setPortfolio(MOCK_PORTFOLIO);
-
-      } catch (err) {
-        console.error("Greška pri učitavanju portfolija:", err);
-      } finally {
-        setLoading(false);
-      }
+try {
+  setLoading(true);
+  const res = await portfolioApi.getClientPortfolio(user.id);
+  setPortfolio(res.data);
+} catch (err) {
+  console.error("API ne radi, koristim mock podatke:", err);
+  // OVO TI OMOGUĆAVA DA RADIŠ DALJE NA UI DOK JE BACKEND OFFLINE
+  setPortfolio(MOCK_PORTFOLIO); 
+} finally {
+  setLoading(false);
+}
     };
     loadData();
   }, [user]);
