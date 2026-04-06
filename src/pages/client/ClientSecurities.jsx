@@ -12,6 +12,7 @@ import Alert from '../../components/ui/Alert';
 import Navbar from '../../components/layout/Navbar';
 import styles from './ClientSubPage.module.css';
 import secStyles from './ClientSecurities.module.css';
+import { clientApi } from '../../api/endpoints/client';
 
 
 function applyFilters(list, filters, search) {
@@ -46,9 +47,15 @@ function applySort(list, sortBy, sortDir) {
 
 function OrderModal({ security, activeTab, isEmployee, onClose }) {
   const [qty, setQty] = useState(1);
+  const [accountNumber, setAccountNumber] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+
+  const clientId = useAuthStore(s => s.user?.client_id ?? s.user?.id);
+  const { data: accountsData } = useFetch(() => clientApi.getAccounts(clientId), [clientId]);
+  const accounts = Array.isArray(accountsData) ? accountsData : accountsData?.data ?? [];
+  console.log("ACCOUNTS:", accounts);
 
   if (!security) return null;
 
@@ -56,22 +63,39 @@ function OrderModal({ security, activeTab, isEmployee, onClose }) {
   const total = (security.price * qty).toLocaleString('sr-RS', { minimumFractionDigits: 2 });
 
   async function handleSubmit(e) {
-    e.preventDefault();
-    setError('');
-    setSubmitting(true);
-    try {
-      await securitiesApi.buy({
-        listingId:   security.id,
-        listingType: activeTab,
-        quantity:    qty,
-      });
-      setSubmitted(true);
-    } catch (err) {
-      setError(err?.message || 'Greška pri kupovini. Pokušajte ponovo.');
-    } finally {
-      setSubmitting(false);
-    }
+  e.preventDefault();
+
+  console.log("ACCOUNT (pre check):", accountNumber); 
+
+  setError('');
+  if (!accountNumber) { 
+    console.log("ACCOUNT JE PRAZAN ❌"); 
+    setError('Izaberite račun.'); 
+    return; 
   }
+
+  setSubmitting(true);
+
+  try {
+    console.log("SENDING DATA:", {  
+      listingId: security.id,
+      accountNumber: accountNumber,
+      quantity: qty,
+    });
+
+    await securitiesApi.buy({
+      listingId:     security.id,
+      accountNumber: accountNumber,
+      quantity:      qty,
+    });
+
+    setSubmitted(true);
+  } catch (err) {
+    setError(err?.message || 'Greška pri kupovini. Pokušajte ponovo.');
+  } finally {
+    setSubmitting(false);
+  }
+}
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -108,6 +132,23 @@ function OrderModal({ security, activeTab, isEmployee, onClose }) {
               <div style={{ fontSize: 14, fontWeight: 600 }}>
                 {security.price?.toLocaleString('sr-RS', { minimumFractionDigits: 2 })}
               </div>
+            </div>
+
+            <div className={styles.formField}>
+              <label>Račun za kupovinu</label>
+              <select
+                className={styles.formInput}
+                value={accountNumber}
+                onChange={e => setAccountNumber(e.target.value)}
+                required
+              >
+                <option value="">Izaberite račun...</option>
+                {accounts.map(a => (
+                  <option key={a.account_number ?? a.number} value={a.account_number ?? a.number}>
+                    {a.name} — {a.account_number ?? a.number}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className={styles.formField}>
@@ -170,14 +211,15 @@ export default function ClientSecurities() {
   }, [activeTab]);
 
   const { data: rawData, loading, error, refetch } = useFetch(fetcher, [activeTab]);
+  console.log('STATE:', { loading, error, rawData }); // DODAJ OVO
   const securities = Array.isArray(rawData) ? rawData : [];
 
   const filtered = useMemo(() => applyFilters(securities, filters, search), [securities, filters, search]);
   const sorted   = useMemo(() => applySort(filtered, sortBy, sortDir), [filtered, sortBy, sortDir]);
 
-  useLayoutEffect(() => {
-    setSelectedSec(sorted[0] ?? null);
-  }, [activeTab]);   
+  //useLayoutEffect(() => {
+  //  setSelectedSec(sorted[0] ?? null);
+  //}, [activeTab]);   
   useLayoutEffect(() => {
     if (loading) return;
     const ctx = gsap.context(() => {
@@ -185,7 +227,7 @@ export default function ClientSecurities() {
     }, pageRef);
     return () => ctx.revert();
   }, [loading, activeTab]);
-
+/*
   async function handleSelectSecurity(sec) {
     try {
       let details;
@@ -197,7 +239,22 @@ export default function ClientSecurities() {
       setSelectedSec(sec);  
     }
   }
+*/
 
+  async function handleSelectSecurity(sec) {
+  setSelectedSec(sec);
+  // Kada back tim popravi endpoint, odkomentarisati:
+  // try {
+  //   let details;
+  //   if (activeTab === 'STOCK')   details = await securitiesApi.getStockById(sec.id);
+  //   if (activeTab === 'FUTURES') details = await securitiesApi.getFuturesById(sec.id);
+  //   if (activeTab === 'FOREX')   details = await securitiesApi.getForexById(sec.id);
+  //   setSelectedSec(details ?? sec);
+  // } catch {
+  //   setSelectedSec(sec);
+  // }
+  }
+  
   async function handleRefresh(sec) {
     await handleSelectSecurity(sec);
   }
