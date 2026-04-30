@@ -13,8 +13,8 @@ describe('Scenario 2.5: Agent nema pristup portalu za upravljanje aktuarima (pre
     // Pokušaj pristupa /admin/actuaries kao agent
     loginAs(agentUser, '/admin/actuaries');
 
-    // SupervisorRoute bi trebalo da ga preusmeri na /admin jer nema supervisor permisije
-    cy.location('pathname', { timeout: 10000 }).should('eq', '/admin');
+    // SupervisorRoute bi trebalo da ga preusmeri na /dashboard jer nema supervisor permisije
+    cy.location('pathname', { timeout: 10000 }).should('eq', '/dashboard');
 
     // Verifikuj da stranica nije učitana
     cy.contains('h1', 'Aktuari').should('not.exist');
